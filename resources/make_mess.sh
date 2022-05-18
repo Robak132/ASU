@@ -17,7 +17,8 @@ done
 for i in {1..3}; do
     touch "$RANDOM"
 done
-chmod 600 ./1235
+chmod 706 ./1235
+chmod 777 ./12884
 
 for k in {1..3}; do
   b="$RANDOM"
@@ -38,5 +39,6 @@ done
 cd ../ || exit
 cp -r X Y1
 
-rm X/18
+rm X/19872/335
 cp X/6146 X/6146_2
+echo $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM > "Y1/28864"

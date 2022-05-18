@@ -131,6 +131,5 @@ dmypy.json
 # JetBrains
 /.idea/
 
-/test/X
-/test/Y1
-/test/Y2
+/resources/X
+/resources/Y1

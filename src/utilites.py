@@ -16,7 +16,7 @@ def scan_files(root):
     return all_files
 
 
-def hash_file(filename):
+def hash_from_file(filename):
     sha = hashlib.sha512()
     with open(filename, 'rb') as f:
         while True:

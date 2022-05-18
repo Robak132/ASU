@@ -1,5 +1,6 @@
 {
   "TempExtensions": ["*.tmp"],
   "ProblematicCharacters": [":", "\"", ".", ";", "*", "?", "$", "#", "'", "|", "\\"],
-  "ProblematicCharactersReplacement": "_"
+  "ProblematicCharactersReplacement": "_",
+  "PreferredPermissions": 644
 }

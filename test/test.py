@@ -1,5 +1,5 @@
 import unittest
-from cleaner import rm_empty_files, rm_temp_files, scan_files
+from src.cleaner import rm_empty_files, rm_temp_files, scan_files
 from make_mess import make_mess
 
 
