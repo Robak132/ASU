@@ -1,53 +1,46 @@
-import hashlib
-import os
-import fnmatch
-from datetime import datetime
+import ast
+import configparser
+import json
+import sys
 
-from cleaner import scan_files, rm_empty_files, rm_temp_files
-
-
-def hash_file(filename):
-    BUF_SIZE = 65536
-    sha = hashlib.sha512()
-    with open(filename, 'rb') as f:
-        while True:
-            data = f.read(BUF_SIZE)
-            if not data:
-                break
-            sha.update(data)
-    return sha.hexdigest()
-
+from cleaner import EmptyFilesCleaner, TempFilesCleaner, DuplicateFilesCleaner, ProblematicNamefilesCleaner
+from utilites import scan_files
 
 if __name__ == '__main__':
-    main_folder_name = "../test/X"
-    compare_folders = ["../test/Y1", "../test/Y2"]
+    if len(sys.argv) < 2:
+        exit("Not enough parameters")
 
-    temp_regex = "*.tmp"
+    main_folder_name = sys.argv[1]
+    compare_folders = sys.argv[2:]
+    with open('settings.json', encoding='utf-8') as fh:
+        settings = json.load(fh)
+    temp_regex = settings["TempExtensions"]
+    problematic_characters = settings["ProblematicCharacters"]
+    replacement = settings["ProblematicCharactersReplacement"]
 
     file_list = scan_files(main_folder_name)
-    print("Mapping files: DONE")
-
-    save_option=None
-    hash_table = {}
-    for file in scan_files(main_folder_name):
-        if os.stat(file).st_size != 0:
-            fhash = hash_file(file)
-            if fhash in hash_table.keys():
-                l_timestamp = datetime.fromtimestamp(os.stat(file).st_mtime).strftime('%Y-%m-%d-%H:%M')
-                r_timestamp = datetime.fromtimestamp(os.stat(hash_table[fhash]).st_mtime).strftime('%Y-%m-%d-%H:%M')
-                print(f"Duplicate file found: {file} ({l_timestamp}) == {hash_table[fhash]} ({r_timestamp}). L - Left version, R - Right version")
-            else:
-                hash_table[fhash] = file
+    hash_table = DuplicateFilesCleaner().clean(file_list)
+    print("Duplicate files: DONE")
 
     for folder in compare_folders:
         for file in scan_files(folder):
             fhash = hash_file(file)
             if fhash not in hash_table.keys():
-                print(f"New file found: {file}. C - Copy to base folder, M - Move to base folder, I - Ignore")
+                shutil.copy2(file, file.replace(folder, main_folder_name))
+            elif os.stat(file).st_size != 0:
+                l_timestamp = datetime.fromtimestamp(os.stat(file).st_mtime).strftime('%Y-%m-%d-%H:%M')
+                r_timestamp = datetime.fromtimestamp(os.stat(hash_table[fhash]).st_mtime).strftime('%Y-%m-%d-%H:%M')
+                print(f"Conflict in merging files: {hash_table[fhash]} ({r_timestamp}) <- {file} ({l_timestamp})\n"
+                      f"Choose which version you want to save: L - Left version, R - Right version, B - Both versions")
 
-    # file_list = rm_empty_files(file_list)
-    # print("Empty files: DONE")
+    file_list = scan_files(main_folder_name)
+    EmptyFilesCleaner().clean(file_list)
+    print("Empty files: DONE")
 
-    # file_list = rm_temp_files(file_list, temp_regex)
-    # print("Temp files: DONE")
+    file_list = scan_files(main_folder_name)
+    TempFilesCleaner(temp_regex).clean(file_list)
+    print("Temp files: DONE")
 
+    file_list = scan_files(main_folder_name)
+    ProblematicNamefilesCleaner(problematic_characters, replacement).clean(file_list)
+    print("Temp files: DONE")
